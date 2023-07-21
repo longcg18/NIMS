@@ -1,0 +1,6 @@
+<div class="card" style="left: 10px; position: absolute;">
+    <button pButton type="button" label="Expand all" (click)="expandAll()" class="mr-2"></button>
+    <button pButton type="button" label="Collapse all" (click)="collapseAll()"></button>
+    <p-tree [value]="data" selectionMode="checkbox" [filter]="true" filterMode="strict" filterPlaceholder="Strict Filter"></p-tree>
+
+  </div>
