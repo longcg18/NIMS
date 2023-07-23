@@ -3,6 +3,11 @@ import { NodeService } from 'src/service/nodeservice';
 import { Location } from './location';
 import { TreeNode } from 'primeng/api';
 import { Tree } from 'primeng/tree';
+<<<<<<< Updated upstream
+=======
+import { MessageService } from 'primeng/api';
+import { Device } from '../device/device';
+>>>>>>> Stashed changes
 
 @Component({
   selector: 'app-node-data',
@@ -23,10 +28,19 @@ export class NodeDataComponent implements OnInit{
 
   data!: TreeNode[] ;
   
+<<<<<<< Updated upstream
   selected_node!: TreeNode[] | null ;
 
   constructor(
     private nodeService: NodeService
+=======
+  selected_node!: any;
+
+  devices!: Device[];
+
+  constructor(
+    private nodeService: NodeService, private messageService: MessageService
+>>>>>>> Stashed changes
   ) {}
 
   getNodeData(): void {
@@ -78,7 +92,42 @@ export class NodeDataComponent implements OnInit{
       }
   }
   
+<<<<<<< Updated upstream
 
+=======
+  printSelectedNode(event: any) {
+    this.messageService.add({
+      severity: "info",
+      summary: "A node selected",
+      detail: event.node.label
+    })
+    //this.devices = this.getNodeDevices(event.node.key);
+    this.nodeService.getAllDevice(event.node.key).subscribe((res: any) => {
+      this.devices = res;
+    })
+    console.log(event.node.key);
+  }
+
+  getNodeDevices(location_id: any): Device[] {
+    let subdev: Device[] = [];
+    
+    this.nodeService.getAllDevice(location_id).subscribe((res: any) => {
+      subdev = res;
+      console.log(subdev);
+      return subdev;
+    })
+    return subdev;
+  }
+
+  closeSelectedNode(event: any) {
+    this.messageService.add({
+      severity: "info",
+      summary: "A node unselected",
+      detail: event.node.label
+    })
+    console.log(event.node.label)
+  }
+>>>>>>> Stashed changes
 
   private convertToTreeNode(customArray: any[]): TreeNode[] {
     const treeNodeMap = new Map<number, TreeNode>();

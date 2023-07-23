@@ -1,6 +1,24 @@
 <div class="card" style="left: 10px; position: absolute;">
+<<<<<<< Updated upstream
     <button pButton type="button" label="Expand all" (click)="expandAll()" class="mr-2"></button>
     <button pButton type="button" label="Collapse all" (click)="collapseAll()"></button>
     <p-tree [value]="data" selectionMode="checkbox" [filter]="true" filterMode="strict" filterPlaceholder="Strict Filter"></p-tree>
 
   </div>
+=======
+    <p-toast></p-toast>
+    <button pButton type="button" label="Expand all" (click)="expandAll()" class="mr-2"></button>
+    <button pButton type="button" label="Collapse all" (click)="collapseAll()"></button>
+    <p-tree [value]="data" selectionMode="single" [filter]="true" filterMode="strict" filterPlaceholder="Strict Filter" [(selection)]="selected_node"
+      (onNodeSelect)="printSelectedNode($event)" (onNodeUnselect)="closeSelectedNode($event)"
+    ></p-tree>
+    
+</div>
+<div class="card" style="right: 10px; position:absolute;">
+  <ul class="devices">
+    <li *ngFor="let device of devices">
+      {{device.device_code}} &emsp; {{device.network_class}} &emsp; {{device.location_name}} &emsp; {{device.path_name}} &emsp; {{device.network}}
+    </li>
+  </ul>
+</div>
+>>>>>>> Stashed changes
