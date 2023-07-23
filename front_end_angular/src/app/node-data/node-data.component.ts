@@ -3,11 +3,9 @@ import { NodeService } from 'src/service/nodeservice';
 import { Location } from './location';
 import { TreeNode } from 'primeng/api';
 import { Tree } from 'primeng/tree';
-<<<<<<< Updated upstream
-=======
+
 import { MessageService } from 'primeng/api';
 import { Device } from '../device/device';
->>>>>>> Stashed changes
 
 @Component({
   selector: 'app-node-data',
@@ -28,19 +26,13 @@ export class NodeDataComponent implements OnInit{
 
   data!: TreeNode[] ;
   
-<<<<<<< Updated upstream
-  selected_node!: TreeNode[] | null ;
 
-  constructor(
-    private nodeService: NodeService
-=======
   selected_node!: any;
 
   devices!: Device[];
 
   constructor(
     private nodeService: NodeService, private messageService: MessageService
->>>>>>> Stashed changes
   ) {}
 
   getNodeData(): void {
@@ -92,9 +84,7 @@ export class NodeDataComponent implements OnInit{
       }
   }
   
-<<<<<<< Updated upstream
 
-=======
   printSelectedNode(event: any) {
     this.messageService.add({
       severity: "info",
@@ -127,7 +117,6 @@ export class NodeDataComponent implements OnInit{
     })
     console.log(event.node.label)
   }
->>>>>>> Stashed changes
 
   private convertToTreeNode(customArray: any[]): TreeNode[] {
     const treeNodeMap = new Map<number, TreeNode>();
