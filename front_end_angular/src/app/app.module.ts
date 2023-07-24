@@ -20,6 +20,7 @@ import { ToastModule } from 'primeng/toast';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DeviceComponent } from './device/device.component';
 import { RelationComponent } from './relation/relation.component';
+//import { CytoscapejsModule } from 'ngx-cytoscapejs';
 
 //import { CytoscapeModule } from 'ngx-cytoscape';
 

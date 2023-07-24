@@ -149,15 +149,16 @@ export class NodeDataComponent implements OnInit{
             console.log(connection);  
           }
         });
-        let graph: any = {
-          nodes: data,
-          edges: edges,
-        }
-        this.cy = cytoscape({
-          container: document.getElementById('cy'),
-          elements: graph
-        })
       }
+
+      let graph: any = {
+        nodes: data,
+        edges: edges,
+      }
+      this.cy = cytoscape({
+        container: document.getElementById('cy'),
+        elements: graph
+      })
       //console.log(this.devices)
     })  
     //console.log(event.node.key);
