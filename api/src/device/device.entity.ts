@@ -42,4 +42,7 @@ export class Device {
 
     @Column({charset: 'utf8', collation: 'utf8_general_ci', nullable: true})
     province_name: string;
+
+    @Column({nullable: true})
+    province_id: string;
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Device } from './device.entity';
 import { Repository } from 'typeorm';
@@ -24,6 +24,29 @@ export class DeviceService {
         //    .select()
         //    .where()
         return await this.deviceRepo.find({where:{location_id: _id,}})
+    }
+
+    async findAllByProvinceId(_id): Promise<Device[]> {
+        console.log("Province id =", _id)
+        return await this.deviceRepo.find({
+            where: [
+                {
+                    province_id: _id,
+                    network_class: "AGG_DISTRICT",
+                },
+                {
+                    province_id: _id,
+                    network_class: "CORE_PROVINCE",
+                }
+            ]
+        })
+/*
+        const res = await this.deviceRepo.createQueryBuilder("device")
+            .select("device")
+            .where("device.province_id = :id", {
+                province_id: _id
+            })
+            .andWhere("device.network_class = ") */
     }
 
     async create(device: Device): Promise<Device> {

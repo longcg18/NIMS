@@ -11,4 +11,5 @@ export interface Device {
     location_name: string;
     path_name: string;
     province_name: string;
+    province_id: string;
 }

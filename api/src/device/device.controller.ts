@@ -15,5 +15,9 @@ export class DeviceController {
     return this.deviceService.findAllByLocationId(id);
   }
 
+  @Get('/province/' + ':id')
+  findByProvinceId(@Param('id')id: string): Promise<Device[]> {
+    return this.deviceService.findAllByProvinceId(id);
+  }
 }
 

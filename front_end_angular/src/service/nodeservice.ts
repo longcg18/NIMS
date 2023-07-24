@@ -12,7 +12,7 @@ const httpOptions ={
 
 const apiUrl = 'http://localhost:3000/location';
 
-const getAllDevice = 'http://localhost:3000/device/location/'
+const getAllDevice = 'http://localhost:3000/device/province/'
 
 @Injectable({
     providedIn: 'root'
