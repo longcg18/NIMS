@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { LocationModule } from './location/location.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DeviceModule } from './device/device.module';
+import { RelationModule } from './relation/relation.module';
 
 @Module({
   imports: [
@@ -24,7 +25,11 @@ import { DeviceModule } from './device/device.module';
     
     
     
-    DeviceModule],
+    DeviceModule,
+    
+    
+    
+    RelationModule],
   controllers: [AppController],
   providers: [AppService],
 })
