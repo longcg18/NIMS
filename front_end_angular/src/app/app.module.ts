@@ -19,13 +19,16 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DeviceComponent } from './device/device.component';
+import { RelationComponent } from './relation/relation.component';
 
+//import { CytoscapeModule } from 'ngx-cytoscape';
 
 @NgModule({
   declarations: [
     AppComponent,
     NodeDataComponent,
-    DeviceComponent
+    DeviceComponent,
+    RelationComponent
   ],
   imports: [
     ButtonModule,
@@ -37,7 +40,8 @@ import { DeviceComponent } from './device/device.component';
 
     HttpClientModule,
     ToastModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    
   ],
   providers: [NodeService, HttpClient, MessageService],
   bootstrap: [AppComponent]

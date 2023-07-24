@@ -6,15 +6,23 @@ import { Tree } from 'primeng/tree';
 
 import { MessageService } from 'primeng/api';
 import { Device } from '../device/device';
+import { Relation } from '../relation/relation';
+import { DeviceComponent } from '../device/device.component';
+import { Connection } from '../relation/connection';
+import * as cytoscape from 'cytoscape';
 
+//declare var cytoscape!: cytoscape;
 @Component({
   selector: 'app-node-data',
   templateUrl: './node-data.component.html',
   styleUrls: ['./node-data.component.css']
 })
+
 export class NodeDataComponent implements OnInit{
 
   @Input() node?: Node;
+
+  public cy: cytoscape.Core | undefined;
 
   locations: Location[] = [];
 
@@ -26,6 +34,9 @@ export class NodeDataComponent implements OnInit{
 
   data!: TreeNode[] ;
   
+  relations!: Relation[] ;
+
+  connections!: Connection[];
 
   selected_node!: any;
 
@@ -62,7 +73,6 @@ export class NodeDataComponent implements OnInit{
     })
   }
 
-
   expandAll() {
     this.data.forEach((node) => {
         this.expandRecursive(node, true);
@@ -86,6 +96,7 @@ export class NodeDataComponent implements OnInit{
   
 
   printSelectedNode(event: any) {
+    let tempDevices: Device[] = [];
     this.messageService.add({
       severity: "info",
       summary: "A node selected",
@@ -94,10 +105,66 @@ export class NodeDataComponent implements OnInit{
     //this.devices = this.getNodeDevices(event.node.key);
     this.nodeService.getAllDevice(event.node.key).subscribe((res: any) => {
       this.devices = res;
-    })
-    console.log(event.node.key);
-  }
+      tempDevices = this.devices;
+      let connections: Connection[] = [];
+      let data: any [] = [];
+      let edges: any [] = [];
+      for (let device of tempDevices) {
+        this.nodeService.getRelation(device.device_code).subscribe((responses) => {
+          for (let res of responses) {
+            let node1 = {
+              data:
+              {              id: res.node_code,
+              type: 'node',
+              name: res.node_code}
+            }
+            data.push(node1);
+            let node2 = {
+              data:
+              {id: res.node_code_relation,
+              type: 'node',
+              name: res.node_code_relation}
+            }
+            data.push(node2)
+            let edge = {
+              id: res.relation_id,
+              source: res.node_code,
+              taret: res.node_code_relation,
+            }
+            edges.push(edge)
+            let connection: Connection = {
+              node_code: res.node_code,
+              interface_port: res.interface_port,
+              node_type: res.node_type,
+              
+              relation_id: res.relation_id,
+              relation_key: res.relation_key,
 
+              node_code_relation: res.node_code_relation,
+              node_type_relation: res.node_type_relation,
+              interface_port_relation: res.interface_port_relation,
+              
+            }
+            connections.push(connection);
+            console.log(connection);  
+          }
+        });
+        let graph: any = {
+          nodes: data,
+          edges: edges,
+        }
+        this.cy = cytoscape({
+          container: document.getElementById('cy'),
+          elements: graph
+        })
+      }
+      //console.log(this.devices)
+    })  
+    //console.log(event.node.key);
+    console.log(tempDevices);
+
+  }
+  
   getNodeDevices(location_id: any): Device[] {
     let subdev: Device[] = [];
     
@@ -118,39 +185,28 @@ export class NodeDataComponent implements OnInit{
     console.log(event.node.label)
   }
 
-  private convertToTreeNode(customArray: any[]): TreeNode[] {
-    const treeNodeMap = new Map<number, TreeNode>();
-
-    // First pass: Create TreeNode objects and map them by their id.
-    for (const item of customArray) {
-      treeNodeMap.set(item.id, {
-        data: { id: item.id, name: item.name }, // Modify this if you have additional data in your node.
-        children: [],
-      });
-    }
-
-    // Second pass: Connect the children to their parent nodes.
-    for (const item of customArray) {
-      if (item.parent_id !== null) {
-        const parent = treeNodeMap.get(item.parent_id);
-        const child = treeNodeMap.get(item.id);
-
-        if (parent && child) {
-          parent.children = parent.children || [];
-          parent.children.push(child);
-        }
-      }
-    }
-    return customArray
-      .filter((item) => item.parent_id === null)
-      .map((item) => treeNodeMap.get(item.id)!);
-
+  drawRelation() {
+    return this.relations;
   }
 
-  private getTreeNodeChildren(parentItem: any, flatData: any[]): TreeNode[] {
+  getDeviceRelation(start_device_code: string): Relation {
+    console.log(start_device_code);
+    let relation!: Relation;
+    this.nodeService.getRelation(start_device_code).subscribe((responses) => {
+      for (let res of responses) {
+        relation.start_device_code = res.node_code;
+        relation.start_device_int_port = res.interface_port;
+        relation.start_device_type = res.node_type;
 
-    const children = flatData.filter((item) => item.parentId === parentItem.id);
-    return this.convertToTreeNode(children);
+        relation.relation_id.push(res.relation_id);
+        relation.relation_key.push(res.relation_key);
+
+        relation.end_device_code.push(res.node_code_relation);
+        relation.end_device_int_port.push(res.interface_port_relation);
+        relation.end_device_type.push(res.node_type_relation);
+      }
+    })
+    return relation;
   }
 }
 
@@ -170,7 +226,6 @@ function getChildrenLocation(location_id: any, locations: any[]): TreeNode[] {
         childLocations.push(childNode)
     }
   })
-  //if (childLocations.length > 0)
   return childLocations
 }
 
@@ -191,32 +246,3 @@ function getParentLocation(parent_id: string, locations: any[]): TreeNode {
   }
 
 }
-
-function totree(branches: any, node: any) {
-  // if we don't have the parent yet
-  if (!branches[node.parent]) {
-    // create a dummy placeholder for now
-    branches[node.parent] = {};
-  }
-  // store our node in its parent
-  branches[node.parent][node.id] = node;
-  // store our node in the full list
-  // copy all added branches on possible placeholder
-  branches[node.id] = Object.assign(node, branches[node.id]);
-
-  return branches;
-}
-
-function convert_to_node(l: Location): any {
-  const node = [{
-    key: l.location_id,
-    label: l.location_name,
-    parent_id: l.parent_id,
-    data: l.location_name
-  }]
-  return node;
-}
-
-
-
-
