@@ -1,3 +1,15 @@
+<style>
+  #cy {
+    width: 1000px;
+    height: 600px;
+    display:grid;
+    border-style: groove;
+    position:absolute;
+    right:0%;
+    nav-left: auto;
+  }
+</style>
+
 <div class="card" style="left: 10px; position: absolute;">
 
     <p-toast></p-toast>
@@ -8,13 +20,13 @@
     ></p-tree>
     
 </div>
-<div class="card" style="right: 10px; position:absolute;">
+<!--div class="card" style="right: 10px; position:absolute;">
   <ul class="devices">
     <li *ngFor="let device of devices">
       {{device.device_code}} &emsp; {{device.network_class}} &emsp; {{device.location_name}} &emsp; {{device.path_name}} &emsp; {{device.network}}
     </li>
   </ul>
-</div>
-<div id="cy" style="height: auto; position: relative; bottom: 0%; right: 5px">
+</div-->
+<div id="cy">
 
 </div>

@@ -10,6 +10,8 @@ import { Relation } from '../relation/relation';
 import { DeviceComponent } from '../device/device.component';
 import { Connection } from '../relation/connection';
 import * as cytoscape from 'cytoscape';
+import { ElementsDefinition } from 'cytoscape';
+import { group } from '@angular/animations';
 
 //declare var cytoscape!: cytoscape;
 @Component({
@@ -22,13 +24,9 @@ export class NodeDataComponent implements OnInit{
 
   @Input() node?: Node;
 
-  public cy: cytoscape.Core | undefined;
+  public cy?: cytoscape.Core;
 
   locations: Location[] = [];
-
-  flatArray!: any[];
-
-  customArray!: any[];
 
   customTreeNodes!: TreeNode[];
 
@@ -55,6 +53,7 @@ export class NodeDataComponent implements OnInit{
       this.locations = res;
       let tempLocations: Location[] = res;
       let temp: any = [];
+
       this.locations.forEach((i) => {
         let temp2: TreeNode = {
           data: {
@@ -107,31 +106,108 @@ export class NodeDataComponent implements OnInit{
       this.devices = res;
       tempDevices = this.devices;
       let connections: Connection[] = [];
-      let data: any [] = [];
+      let nodes: any = [];
       let edges: any [] = [];
+      let relations_array: any[] = [];
+      
+      var cy = cytoscape({
+        container: document.getElementById('cy'),   
+      })
+      
+      var cyNodes:any = [];
+      var cyEdges:any = [];
       for (let device of tempDevices) {
         this.nodeService.getRelation(device.device_code).subscribe((responses) => {
+
           for (let res of responses) {
-            let node1 = {
-              data:
-              {              id: res.node_code,
-              type: 'node',
-              name: res.node_code}
+            let node1: any = {
+              data: {              
+                id: res.node_code,
+                //name: res.node_code
+              }
             }
-            data.push(node1);
-            let node2 = {
-              data:
-              {id: res.node_code_relation,
-              type: 'node',
-              name: res.node_code_relation}
+
+            cy.add([
+              {
+                group: 'nodes',
+                data: {
+                  id: res.node_code
+                }
+              },
+                {group: 'nodes',
+                data: {
+                  id: res.node_code_relation
+                }},
+                {group: 'edges',
+                data: {
+                  source: res.node_code,
+                  target: res.node_code_relation
+                }}
+            ])
+
+            cy.layout({
+              name: 'grid',
+              avoidOverlap:true,
+              avoidOverlapPadding:10
+            }).run();
+            nodes.push(node1);
+            relations_array.push(node1);
+            let cyNode1: cytoscape.NodeDefinition = {
+              data: {
+                id: res.node_code
+              }
             }
-            data.push(node2)
-            let edge = {
-              id: res.relation_id,
-              source: res.node_code,
-              taret: res.node_code_relation,
+            let cyNode2: cytoscape.NodeDefinition = {
+              data: {
+                id: res.node_code_relation
+              }
+            }
+
+            let cyEdge: cytoscape.EdgeDefinition = {
+              data: {
+                source: res.node_code,
+                target: res.node_code_relation
+              }
+            }
+
+            //
+            cyNodes.push({
+              data: {
+                id: res.node_code.toString(),
+                name: res.node_type.toString(),
+              }
+            });
+            cyNodes.push({
+              data: {
+                id: res.node_code_relation.toString(),
+                name: res.node_type_relation.toString(),
+              }
+            });
+
+            //
+            cyEdges.push({
+              data: {
+                source: res.node_code.toString(),
+                target: res.node_code_relation.toString(),
+              }
+            });
+            let node2: any = {
+              data:
+              {
+                id: res.node_code_relation,
+              }
+            }
+            nodes.push(node2)
+            relations_array.push(node2)
+            let edge: any = {
+              data: {
+                id: res.node_code + res.node_code_relation,
+                source: res.node_code,
+                taret: res.node_code_relation
+              }
             }
             edges.push(edge)
+            relations_array.push(edge)
             let connection: Connection = {
               node_code: res.node_code,
               interface_port: res.interface_port,
@@ -146,24 +222,19 @@ export class NodeDataComponent implements OnInit{
               
             }
             connections.push(connection);
-            console.log(connection);  
           }
         });
-      }
 
-      let graph: any = {
-        nodes: data,
-        edges: edges,
       }
-      this.cy = cytoscape({
-        container: document.getElementById('cy'),
-        elements: graph
-      })
-      //console.log(this.devices)
+      cy.style([ // the stylesheet for the graph
+      {
+        selector: 'node',
+        style: {
+          'background-color': 'blue',
+          'label': 'data(id)'
+        }
+      },])
     })  
-    //console.log(event.node.key);
-    console.log(tempDevices);
-
   }
   
   getNodeDevices(location_id: any): Device[] {
@@ -230,6 +301,38 @@ function getChildrenLocation(location_id: any, locations: any[]): TreeNode[] {
   return childLocations
 }
 
+const convertToCytoscapeElements = (array: any[]): ElementsDefinition => {
+  const nodes: any = [];
+  const edges: any = [];
+
+  array.forEach((element) => {
+    if ('source' in element && 'target' in element) {
+      // This is an edge
+      edges.push({
+        data: {
+          id: element.id,
+          source: element.source,
+          target: element.target,
+         // label: element.label,
+        },
+      });
+    } else {
+      // This is a node
+      nodes.push({
+        data: {
+          id: element.id,
+          //label: element.label,
+        },
+      });
+    }
+  });
+
+  return {
+    nodes: nodes,
+    edges: edges,
+  };
+};
+
 function getParentLocation(parent_id: string, locations: any[]): TreeNode {
   if (parent_id != null) {
     let tempLocation: Location = locations.find((obj) => obj.location_id === parent_id)
@@ -247,3 +350,45 @@ function getParentLocation(parent_id: string, locations: any[]): TreeNode {
   }
 
 }
+
+function removeDuplicatesFromArray(array: any[]): any[] {
+  const uniqueArray = array.filter((item, index) => {
+    // Return the first occurrence of the item's index in the array
+    return array.indexOf(item) === index;
+    // If you prefer using 'includes', you can use the following line instead:
+    // return !array.slice(0, index).includes(item);
+  });
+
+  return uniqueArray;
+}
+
+function uniqByObject<T>(array: T[]) {
+  const result: T[] = [];
+  for (const item of array) {
+      if (!result.includes(item)) {
+          result.push(item);
+      }
+  }
+  return result;
+}
+
+
+            /*
+            cy.add([
+              {
+                group: 'nodes',
+                data: {
+                  id: res.node_code
+                }
+              },
+                {group: 'nodes',
+                data: {
+                  id: res.node_code_relation
+                }},
+                {group: 'edges',
+                data: {
+                  source: res.node_code,
+                  target: res.node_code_relation
+                }}
+              
+            ])*/
