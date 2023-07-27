@@ -26,7 +26,9 @@ export class NodeDataComponent implements OnInit{
 
   @Input() node?: Node;
 
-  public cy?: cytoscape.Core;
+  //public cy?: cytoscape.Core;
+
+  public cy!: cytoscape.Core;
 
   locations: Location[] = [];
 
@@ -95,39 +97,71 @@ export class NodeDataComponent implements OnInit{
       }
   }
   
+  
+  changeLayoutToCose() {
+    this.cy.layout({
+      name: 'cose',
+      animate: true
+    }).run();
+  }
 
+  changeLayoutToGrid() {
+    this.cy.layout({
+      name: 'grid',
+      animate: true
+    }).run();
+  }
+
+  changeLayoutToCircle() {
+    this.cy.layout({
+      name: 'circle',
+      animate: true,
+    }).run()
+  }
+
+  changeLayoutToConcentric() {
+    this.cy.layout({
+      name: 'concentric',
+      animate: true,
+    }).run()
+  }
   printSelectedNode(event: any) {
     let coreDevices: Device[] = [];
     this.messageService.add({
       severity: "info",
-      summary: "Node selected:",
+      summary: "Province selected:",
       detail: event.node.label
     })
     this.nodeService.getAllDevice(event.node.key).subscribe((res: any) => {
       this.devices = res;
       coreDevices = this.devices;
-      var cy = cytoscape({
-        container: document.getElementById('cy'),   
+      //var cy = cytoscape({
+      //})
+      //this.cy.container( document.getElementById('cy'))
+      this.cy = cytoscape({
+        container: document.getElementById('cy')
       })
-      console.log(coreDevices)
+      //console.log(coreDevices)
       for (let device of coreDevices) {
         this.nodeService.getRelation(device.device_code).subscribe((responses) => {
           
           for (let res of responses) {
             if (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "AGG_DISTRICT") {            
-              cy.add([
+              this.cy.add([
                 {
                   group: 'nodes',
                   data: {
                     id: res.node_code,
-                    type: res.node_type.trim()
+                    type: res.node_type.trim(),
+                    interface: res.interface_port
                   },
                 },
                 {
                   group: 'nodes',
                   data: {
                     id: res.node_code_relation,
-                    type: res.node_type_relation.trim()
+                    type: res.node_type_relation.trim(),
+                    interface: res.interface_port_relation
                   }
                 },
                 {
@@ -139,14 +173,15 @@ export class NodeDataComponent implements OnInit{
                 }
               ])
             }
-            cy.layout({
-              name:'cose'
+            this.cy.layout({
+              name:'grid',
+              animate:false
             }).run();
           }
         });
       }
 
-      cy.style([ 
+      this.cy.style([ 
         {
           selector: 'node[type="AGG_DISTRICT"]',
           style: {
@@ -178,8 +213,13 @@ export class NodeDataComponent implements OnInit{
       
       ])
 
-      cy.on('tap', 'node', function (evt) {
-        console.log(evt.target.data('id'), evt.target.data('type'))
+      this.cy.on('tap', 'node',  (evt) => {
+        //console.log(evt.target.data('id'dsdasdasd), evt.target.data('type'))
+        this.messageService.add({
+          severity: "info",
+          summary: "Device selected:",
+          detail: "Type: " + evt.target.data('type') + "\nLocation: " + this.devices.find(({device_code}) => device_code === evt.target.data('id'))?.location_name
+        })
       })
     })  
   }
@@ -201,8 +241,9 @@ export class NodeDataComponent implements OnInit{
       summary: "A node unselected",
       detail: event.node.label
     })
-    console.log(event.node.label)
+    //console.log(event.node.label)
   }
+
 }
 
 function getChildrenLocation(location_id: any, locations: any[]): TreeNode[] {

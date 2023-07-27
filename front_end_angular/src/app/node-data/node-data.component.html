@@ -27,8 +27,16 @@
     ></p-tree>
     
 </div>
+
 <p-panel header="Graph" id="cy-container">
-  
+
+  <ng-template pTemplate="icons">
+    <button pButton icon="pi pi-facebook" class="p-button-icon mr-2" label="Cose" (click)="changeLayoutToCose()"></button>
+    <button pButton icon="pi pi-instagram" class="p-button-danger" label="Grid" (click)="changeLayoutToGrid()"></button>
+    <button pButton icon="pi pi-linkedin" class="p-button-icon mr-2" label="Concentric" (click)="changeLayoutToConcentric()"></button>
+    <button pButton icon="pi pi-reddit" class="p-button-danger" label="Circle" (click)="changeLayoutToCircle()"></button>
+
+  </ng-template>
     <div id="cy"></div>
   <!--ng-template pTemplate="footer" id="footer"></ng-template-->
 
