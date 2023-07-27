@@ -20,6 +20,7 @@ import { ToastModule } from 'primeng/toast';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DeviceComponent } from './device/device.component';
 import { RelationComponent } from './relation/relation.component';
+import { PanelModule } from 'primeng/panel';
 //import { CytoscapejsModule } from 'ngx-cytoscapejs';
 
 //import { CytoscapeModule } from 'ngx-cytoscape';
@@ -37,6 +38,7 @@ import { RelationComponent } from './relation/relation.component';
     AppRoutingModule,
     AngularTreeGridModule,
     TreeModule,
+    PanelModule,
     CheckboxModule,
 
     HttpClientModule,

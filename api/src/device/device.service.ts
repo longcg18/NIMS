@@ -19,15 +19,12 @@ export class DeviceService {
     }
 
     async findAllByLocationId(_id): Promise<Device[]> {
-        console.log("LocationId:", _id);
-        //const res = await this.deviceRepo.createQueryBuilder("device")
-        //    .select()
-        //    .where()
+        //console.log("LocationId:", _id);
         return await this.deviceRepo.find({where:{location_id: _id,}})
     }
 
     async findAllByProvinceId(_id): Promise<Device[]> {
-        console.log("Province id =", _id)
+        //console.log("Province id =", _id)
         return await this.deviceRepo.find({
             where: [
                 {
@@ -40,13 +37,6 @@ export class DeviceService {
                 }
             ]
         })
-/*
-        const res = await this.deviceRepo.createQueryBuilder("device")
-            .select("device")
-            .where("device.province_id = :id", {
-                province_id: _id
-            })
-            .andWhere("device.network_class = ") */
     }
 
     async create(device: Device): Promise<Device> {
