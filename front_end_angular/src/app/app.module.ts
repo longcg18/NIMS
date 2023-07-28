@@ -21,8 +21,9 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DeviceComponent } from './device/device.component';
 import { RelationComponent } from './relation/relation.component';
 import { PanelModule } from 'primeng/panel';
+import { TooltipModule } from 'primeng/tooltip';
+//import { QtipModule } from 'qtip2';
 //import { CytoscapejsModule } from 'ngx-cytoscapejs';
-
 //import { CytoscapeModule } from 'ngx-cytoscape';
 
 @NgModule({
@@ -40,6 +41,8 @@ import { PanelModule } from 'primeng/panel';
     TreeModule,
     PanelModule,
     CheckboxModule,
+    TooltipModule,
+
 
     HttpClientModule,
     ToastModule,

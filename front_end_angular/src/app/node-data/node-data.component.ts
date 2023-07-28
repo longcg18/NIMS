@@ -1,21 +1,16 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NodeService } from 'src/service/nodeservice';
 import { Location } from './location';
 import { TreeNode } from 'primeng/api';
-import { Tree } from 'primeng/tree';
-
 import { MessageService } from 'primeng/api';
 import { Device } from '../device/device';
 import { Relation } from '../relation/relation';
-import { DeviceComponent } from '../device/device.component';
 import { Connection } from '../relation/connection';
 import * as cytoscape from 'cytoscape';
-import { ElementsDefinition } from 'cytoscape';
-import { group } from '@angular/animations';
+//import * as qtip from 'cytoscape-qtip';
+//import * as qtip2 from 'qtip2';
+import * as popper from 'cytoscape-popper';
 
-import { PanelModule } from 'primeng/panel';
-
-//declare var cytoscape!: cytoscape;
 @Component({
   selector: 'app-node-data',
   templateUrl: './node-data.component.html',
@@ -23,10 +18,6 @@ import { PanelModule } from 'primeng/panel';
 })
 
 export class NodeDataComponent implements OnInit{
-
-  @Input() node?: Node;
-
-  //public cy?: cytoscape.Core;
 
   public cy!: cytoscape.Core;
 
@@ -53,6 +44,7 @@ export class NodeDataComponent implements OnInit{
   }
 
   ngOnInit(): void {
+    cytoscape.use(popper)
     this.nodeService.getAll().subscribe((res: any) => {
       this.locations = res;
       let tempLocations: Location[] = res;
@@ -97,11 +89,10 @@ export class NodeDataComponent implements OnInit{
       }
   }
   
-  
   changeLayoutToCose() {
     this.cy.layout({
       name: 'cose',
-      animate: true
+      animate: true,
     }).run();
   }
 
@@ -125,23 +116,20 @@ export class NodeDataComponent implements OnInit{
       animate: true,
     }).run()
   }
+
   printSelectedNode(event: any) {
     let coreDevices: Device[] = [];
     this.messageService.add({
       severity: "info",
       summary: "Province selected:",
       detail: event.node.label
-    })
+    });
     this.nodeService.getAllDevice(event.node.key).subscribe((res: any) => {
       this.devices = res;
       coreDevices = this.devices;
-      //var cy = cytoscape({
-      //})
-      //this.cy.container( document.getElementById('cy'))
       this.cy = cytoscape({
-        container: document.getElementById('cy')
+        container: document.getElementById('cy'),
       })
-      //console.log(coreDevices)
       for (let device of coreDevices) {
         this.nodeService.getRelation(device.device_code).subscribe((responses) => {
           
@@ -174,8 +162,8 @@ export class NodeDataComponent implements OnInit{
               ])
             }
             this.cy.layout({
-              name:'grid',
-              animate:false
+              name:'breadthfirst',
+              animate:false,
             }).run();
           }
         });
@@ -183,50 +171,68 @@ export class NodeDataComponent implements OnInit{
 
       this.cy.style([ 
         {
+          selector: 'node',
+          style: {
+            'label': 'data(id)',
+            'background-clip':'none',
+            'background-fit':'cover',
+            'background-opacity': 0, 
+            'border-width': 0, 
+            'text-valign': 'bottom',
+            'border-color': '#ffffff'
+          }
+        },
+        {
           selector: 'node[type="AGG_DISTRICT"]',
           style: {
-            'background-color': 'blue',
-            'label': 'data(id)'
-          }
+            'background-image':'../assets/server.png',
+          },
         },
         {
           selector: 'node[type="CORE_PROVINCE"]',
           style: {
-            'background-color': 'pink',
-            'label': 'data(id)'
-          }
+            'background-image':'../assets/switch.png',
+          },
         },
         {
-          selector: 'node[type="SITE_ROUTER"]',
+          selector: 'edge',
           style: {
-            'background-color': 'yellow',
-            'label': 'data(id)'
-          }
-        },
-        {
-          selector: 'node[type="CORE_AREA"]',
-          style: {
-            'background-color': 'red',
-            'label': 'data(id)'
+            'width':1,
+            'curve-style':'straight',
+            'line-color':'#1384B9'
           }
         }
-      
-      ])
+      ]);
 
-      this.cy.on('tap', 'node',  (evt) => {
-        //console.log(evt.target.data('id'dsdasdasd), evt.target.data('type'))
+      this.cy.on('tap', 'node', (evt) => {
         this.messageService.add({
           severity: "info",
           summary: "Device selected:",
-          detail: "Type: " + evt.target.data('type') + "\nLocation: " + this.devices.find(({device_code}) => device_code === evt.target.data('id'))?.location_name
+          detail: "Type: " + evt.target.data('type') + "\nLocation: " + this.devices.find(({device_code}) => device_code === evt.target.data('id'))?.path_name,
         })
-      })
-    })  
+      });
+
+      let popper1 = this.cy.nodes()[0].popper({
+        content: () => {
+          let div = document.createElement('div');
+      
+          div.innerHTML = 'Popper content';
+      
+          document.body.appendChild(div);
+      
+          return div;
+        },
+        //popper: {} // my popper options here
+      });
+
+    })
+
+    
   }
+
   
   getNodeDevices(location_id: any): Device[] {
     let subdev: Device[] = [];
-    
     this.nodeService.getAllDevice(location_id).subscribe((res: any) => {
       subdev = res;
       console.log(subdev);
@@ -241,9 +247,7 @@ export class NodeDataComponent implements OnInit{
       summary: "A node unselected",
       detail: event.node.label
     })
-    //console.log(event.node.label)
   }
-
 }
 
 function getChildrenLocation(location_id: any, locations: any[]): TreeNode[] {

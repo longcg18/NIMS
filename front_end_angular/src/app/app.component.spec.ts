@@ -17,7 +17,7 @@ describe('AppComponent', () => {
   it(`should have as title 'tree_grid'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('tree_grid');
+    expect(app.title).toEqual('Net Map');
   });
 
   it('should render title', () => {
