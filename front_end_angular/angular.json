@@ -30,7 +30,9 @@
               "node_modules/primeng/resources/primeng.min.css"
             ],
             "scripts": [
-              "/src/scripts/cytoscape.min.js"
+              "/src/scripts/cytoscape.min.js",
+              "node_modules/cytoscape-qtip/cytoscape-qtip.js",
+              "node_modules/cytoscape-popper/cytoscape-popper.js"
             ]
           },
           "configurations": {

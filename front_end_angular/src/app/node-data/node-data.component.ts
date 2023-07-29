@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit } from '@angular/core';
 import { NodeService } from 'src/service/nodeservice';
 import { Location } from './location';
 import { TreeNode } from 'primeng/api';
@@ -10,6 +10,7 @@ import * as cytoscape from 'cytoscape';
 //import * as qtip from 'cytoscape-qtip';
 //import * as qtip2 from 'qtip2';
 import * as popper from 'cytoscape-popper';
+import 'cytoscape-qtip';
 
 @Component({
   selector: 'app-node-data',
@@ -208,26 +209,87 @@ export class NodeDataComponent implements OnInit{
         this.messageService.add({
           severity: "info",
           summary: "Device selected:",
-          detail: "Type: " + evt.target.data('type') + "\nLocation: " + this.devices.find(({device_code}) => device_code === evt.target.data('id'))?.path_name,
+          detail: "Type: " + evt.target.data('type') + " Location: " + this.devices.find(({device_code}) => device_code === evt.target.data('id'))?.path_name,
         })
       });
 
-      let popper1 = this.cy.nodes()[0].popper({
-        content: () => {
-          let div = document.createElement('div');
+      this.cy.on('tap', 'edge', (evt) => {
+        this.messageService.add({
+          severity: "info",
+          summary: "Edge selected:",
+          detail: "Between: " + evt.target.data('source') + " and: " + evt.target.data('target'),
+        })
+      });
+      var popper: any = null;
+      var popperDiv = document.createElement('div');
       
-          div.innerHTML = 'Popper content';
+      this.cy.on('mouseover', 'node', (evt) => {
+        const node = evt.target;
+        if (popper) {
+          popper.destroy();
+          popper = null;
+        }
       
-          document.body.appendChild(div);
+        popperDiv.innerHTML = `<p-card> <p> ${node.data('type')}</p> ${this.devices.find(({device_code}) => device_code === node.data('id'))?.path_name} </p-card>`;
+        document.body.appendChild(popperDiv);
       
-          return div;
-        },
-        //popper: {} // my popper options here
+        popper = this.cy.popper({
+          content: () => popperDiv,
+          renderedPosition: () => ({ x: node.renderedPosition().x, y: node.renderedPosition().y }),
+          popper: {
+            placement: 'top',
+            modifiers: [{
+              name: 'flip',
+              enabled: false,
+            }],
+            strategy: 'absolute',
+          },
+        });
+      });
+      
+      this.cy.on('mouseout', 'node', () => {
+        if (popper) {
+          popper.destroy();
+          popper = null;
+        }
+        if (popperDiv.parentNode) {
+          popperDiv.parentNode.removeChild(popperDiv);
+        }
       });
 
-    })
+      this.cy.on('mouseover', 'edge', (evt) => {
+        const edge = evt.target;
+        if (popper) {
+          popper.destroy();
+          popper = null;
+        }
 
-    
+        popperDiv.innerHTML = ` FROM ${edge.data('source')} TO ${edge.data('target')} `;
+        document.body.appendChild(popperDiv);
+        popper = this.cy.popper({
+          content: () => popperDiv,
+          renderedPosition: () => ({ x: edge.renderedPosition().x, y: edge.renderedPosition().y }),
+          popper: {
+            placement: 'top',
+            modifiers: [{
+              name: 'flip',
+              enabled: false,
+            }],
+            strategy: 'absolute',
+          },
+        });
+      })
+
+      this.cy.on('mouseout', 'edge', () => {
+        if (popper) {
+          popper.destroy();
+          popper = null;
+        }
+        if (popperDiv.parentNode) {
+          popperDiv.parentNode.removeChild(popperDiv);
+        }
+      });
+    })
   }
 
   
