@@ -239,13 +239,15 @@ export class NodeDataComponent implements OnInit{
       
         popper = this.cy.popper({
           content: () => popperDiv,
-          renderedPosition: () => ({ x: node.renderedPosition().x, y: node.renderedPosition().y }),
+          renderedPosition: () => ({ x: node.renderedPosition().x, y: node.renderedPosition().y - 12}),
           popper: {
-            placement: 'top',
-            modifiers: [{
-              name: 'flip',
-              enabled: false,
-            }],
+            placement: 'top',  
+            modifiers: [
+              {
+                name: 'flip',
+                enabled: false,
+              },
+          ],
             strategy: 'absolute',
           },
         });
