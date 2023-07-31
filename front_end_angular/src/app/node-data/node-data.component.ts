@@ -7,11 +7,8 @@ import { Device } from '../device/device';
 import { Relation } from '../relation/relation';
 import { Connection } from '../relation/connection';
 import * as cytoscape from 'cytoscape';
-//import * as qtip from 'cytoscape-qtip';
-//import * as qtip2 from 'qtip2';
 import * as popper from 'cytoscape-popper';
 import 'cytoscape-qtip';
-import tippy from 'tippy.js';
 
 @Component({
   selector: 'app-node-data',
@@ -25,11 +22,11 @@ export class NodeDataComponent implements OnInit{
 
   locations: Location[] = [];
 
-  customTreeNodes!: TreeNode[];
+  //customTreeNodes!: TreeNode[];
 
   data!: TreeNode[] ;
   
-  relations!: Relation[] ;
+  //relations!: Relation[] ;
 
   connections!: Connection[];
 
@@ -41,10 +38,6 @@ export class NodeDataComponent implements OnInit{
   constructor(
     private nodeService: NodeService, private messageService: MessageService
   ) {}
-
-  getNodeData(): void {
-    const id = Number()
-  }
 
   ngOnInit(): void {
     cytoscape.use(popper)
@@ -222,8 +215,16 @@ export class NodeDataComponent implements OnInit{
           detail: "Between: " + evt.target.data('source') + " and: " + evt.target.data('target'),
         })
       });
+
       var popper: any = null;
       var popperDiv = document.createElement('div');
+      popperDiv.style.backgroundColor = '#fff'; 
+      popperDiv.style.color = '#000'; 
+      popperDiv.style.padding = '8px'; 
+      popperDiv.style.border = '2px solid cyan';
+      popperDiv.style.borderRadius = '4px';
+      popperDiv.style.fontFamily = 'Montserrat, Arial, sans-serif'; 
+      popperDiv.style.fontSize = '12px';
       
       this.cy.on('mouseover', 'node', (evt) => {
         const node = evt.target;
@@ -232,7 +233,8 @@ export class NodeDataComponent implements OnInit{
           popper = null;
         }
       
-        popperDiv.innerHTML = `<p> ${node.data('type')}</p> ${this.devices.find(({device_code}) => device_code === node.data('id'))?.path_name}`;
+        popperDiv.innerHTML = `Type: ${node.data('type')}<br>Location: ${this.devices.find(({device_code}) => device_code === node.data('id'))?.location_name}
+          <br>Dept Code: ${this.devices.find(({device_code}) => device_code === node.data('id'))?.dept_code}`;
         document.body.appendChild(popperDiv);
       
         popper = this.cy.popper({
@@ -258,64 +260,6 @@ export class NodeDataComponent implements OnInit{
           popperDiv.parentNode.removeChild(popperDiv);
         }
       });
-
-      this.cy.on('mouseover', 'edge', (evt) => {
-        const edge = evt.target;
-        if (popper) {
-          popper.destroy();
-          popper = null;
-        }
-
-        popperDiv.innerHTML = ` From ${edge.data('source')} To ${edge.data('target')} `;
-        document.body.appendChild(popperDiv);
-        popper = this.cy.popper({
-          content: () => popperDiv,
-          renderedPosition: () => ({ x: 150, y: 50 }),
-          popper: {
-            placement: 'top',
-            modifiers: [{
-              name: 'flip',
-              enabled: false,
-            }],
-            strategy: 'absolute',
-          },
-        });
-      })
-
-      this.cy.on('mouseout', 'edge', () => {
-        if (popper) {
-          popper.destroy();
-          popper = null;
-        }
-        if (popperDiv.parentNode) {
-          popperDiv.parentNode.removeChild(popperDiv);
-        }
-      });
-
-/*
-      this.cy.on('mouseover', 'node', (evt) => {
-        let node = evt.target;
-
-        let ref = node.popperRef();
-        let dummyDomEle = document.createElement('div');
-
-        let tip = tippy(dummyDomEle, {
-          getReferenceClientRect: ref.getBoundingClientRect,
-          trigger: 'manual', 
-          duration: 0,
-          theme: 'translucent',
-          content: () => {
-              let content = document.createElement('div');
-
-              content.innerHTML = 'Tippy content';
-
-              return content;
-            }
-          });
-
-        tip.show();
-      })
-      */
     })
   }
 

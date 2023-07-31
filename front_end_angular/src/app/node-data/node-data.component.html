@@ -1,9 +1,9 @@
 <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.js"></script>
-  <script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
-  <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-dagre/1.5.0/cytoscape-dagre.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.5/dist/umd/popper.min.js"></script>
-  <script src="https://unpkg.com/tippy.js@6"></script>
-  <link rel="stylesheet" href="/node_modules/tippy.js/dist/tippy.css">
+<script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
+<script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-dagre/1.5.0/cytoscape-dagre.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.5/dist/umd/popper.min.js"></script>
+<script src="https://unpkg.com/tippy.js@6"></script>
+<link rel="stylesheet" href="/node_modules/tippy.js/dist/tippy.css">
 
 
 <style>
@@ -27,10 +27,10 @@
 <div class="card" style="left: 10px; position: absolute;">
 
     <p-toast></p-toast>
-    <button pButton type="button" label="Expand all" (click)="expandAll()" class="mr-2"></button>
+    <button pButton type="button" label="Expand all" (click)="expandAll()" pTooltip="Expand all provinces" class="mr-2"></button>
     &nbsp;
-    <button pButton type="button" label="Collapse all" (click)="collapseAll()"></button>
-    <p-tree [value]="data" selectionMode="single" [filter]="true" filterMode="strict" filterPlaceholder="Strict Filter" [(selection)]="selected_node"
+    <button pButton type="button" label="Collapse all" (click)="collapseAll()" pTooltip="Collapse all provinces"></button>
+    <p-tree [value]="data" selectionMode="single" [filter]="true" filterMode="strict" filterPlaceholder="Search province" [(selection)]="selected_node"
       (onNodeSelect)="printSelectedNode($event)" (onNodeUnselect)="closeSelectedNode($event)"
     ></p-tree>
     
