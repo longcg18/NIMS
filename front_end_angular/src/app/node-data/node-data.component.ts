@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, Renderer2 } from '@angular/core';
 import { NodeService } from 'src/service/nodeservice';
 import { Location } from './location';
 import { TreeNode } from 'primeng/api';
@@ -11,6 +11,7 @@ import * as cytoscape from 'cytoscape';
 //import * as qtip2 from 'qtip2';
 import * as popper from 'cytoscape-popper';
 import 'cytoscape-qtip';
+import tippy from 'tippy.js';
 
 @Component({
   selector: 'app-node-data',
@@ -36,6 +37,7 @@ export class NodeDataComponent implements OnInit{
 
   devices!: Device[];
 
+  render!: Renderer2;
   constructor(
     private nodeService: NodeService, private messageService: MessageService
   ) {}
@@ -230,7 +232,7 @@ export class NodeDataComponent implements OnInit{
           popper = null;
         }
       
-        popperDiv.innerHTML = `<p-card> <p> ${node.data('type')}</p> ${this.devices.find(({device_code}) => device_code === node.data('id'))?.path_name} </p-card>`;
+        popperDiv.innerHTML = `<p> ${node.data('type')}</p> ${this.devices.find(({device_code}) => device_code === node.data('id'))?.path_name}`;
         document.body.appendChild(popperDiv);
       
         popper = this.cy.popper({
@@ -264,11 +266,11 @@ export class NodeDataComponent implements OnInit{
           popper = null;
         }
 
-        popperDiv.innerHTML = ` FROM ${edge.data('source')} TO ${edge.data('target')} `;
+        popperDiv.innerHTML = ` From ${edge.data('source')} To ${edge.data('target')} `;
         document.body.appendChild(popperDiv);
         popper = this.cy.popper({
           content: () => popperDiv,
-          renderedPosition: () => ({ x: edge.renderedPosition().x, y: edge.renderedPosition().y }),
+          renderedPosition: () => ({ x: 150, y: 50 }),
           popper: {
             placement: 'top',
             modifiers: [{
@@ -289,6 +291,31 @@ export class NodeDataComponent implements OnInit{
           popperDiv.parentNode.removeChild(popperDiv);
         }
       });
+
+/*
+      this.cy.on('mouseover', 'node', (evt) => {
+        let node = evt.target;
+
+        let ref = node.popperRef();
+        let dummyDomEle = document.createElement('div');
+
+        let tip = tippy(dummyDomEle, {
+          getReferenceClientRect: ref.getBoundingClientRect,
+          trigger: 'manual', 
+          duration: 0,
+          theme: 'translucent',
+          content: () => {
+              let content = document.createElement('div');
+
+              content.innerHTML = 'Tippy content';
+
+              return content;
+            }
+          });
+
+        tip.show();
+      })
+      */
     })
   }
 
