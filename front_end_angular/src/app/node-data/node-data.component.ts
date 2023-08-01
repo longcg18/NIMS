@@ -130,7 +130,7 @@ export class NodeDataComponent implements OnInit{
         this.nodeService.getRelation(device.device_code).subscribe((responses) => {
           
           for (let res of responses) {
-            if (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "AGG_DISTRICT") {            
+            if (res.node_type == "CORE_PROVINCE" || res.node_type_relation == "AGG_DISTRICT") {            
               this.cy.add([
                 {
                   group: 'nodes',
