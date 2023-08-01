@@ -23,7 +23,7 @@ export class RelationService {
                 },
                 {
                     node_code: code,
-                    node_code_relation: "CORE_PROVINCE",
+                    node_type_relation: "CORE_PROVINCE",
                 }
             ]
         });
