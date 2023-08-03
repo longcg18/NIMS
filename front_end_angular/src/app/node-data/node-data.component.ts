@@ -9,6 +9,7 @@ import { Connection } from '../relation/connection';
 import * as cytoscape from 'cytoscape';
 import * as popper from 'cytoscape-popper';
 import 'cytoscape-qtip';
+import { group } from '@angular/animations';
 
 @Component({
   selector: 'app-node-data',
@@ -31,6 +32,8 @@ export class NodeDataComponent implements OnInit{
   connections!: Connection[];
 
   selected_node!: any;
+
+  prtConnection!: Connection[];
 
   devices!: Device[];
 
@@ -120,6 +123,9 @@ export class NodeDataComponent implements OnInit{
       summary: "Province selected:",
       detail: event.node.label
     });
+
+    this.prtConnection = [];
+    let otherConnection: Connection[] = [];
     this.nodeService.getAllDevice(event.node.key).subscribe((res: any) => {
       this.devices = res;
       coreDevices = this.devices;
@@ -128,42 +134,109 @@ export class NodeDataComponent implements OnInit{
       })
       for (let device of coreDevices) {
         this.nodeService.getRelation(device.device_code).subscribe((responses) => {
-          
           for (let res of responses) {
-            if (res.node_type == "CORE_PROVINCE" || res.node_type_relation == "AGG_DISTRICT") {            
-              this.cy.add([
-                {
-                  group: 'nodes',
-                  data: {
-                    id: res.node_code,
-                    type: res.node_type.trim(),
-                    interface: res.interface_port
-                  },
-                },
-                {
-                  group: 'nodes',
-                  data: {
-                    id: res.node_code_relation,
-                    type: res.node_type_relation.trim(),
-                    interface: res.interface_port_relation
-                  }
-                },
-                {
-                  group: 'edges',
-                  data: {
-                    source: res.node_code,
-                    target: res.node_code_relation
-                  }
-                }
-              ])
+              if (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "CORE_PROVINCE") {         
+                this.prtConnection.push(res);
+              } else if( (res.node_type == "AGG_DISTRICT" && res.node_type_relation == "CORE_PROVINCE") ||
+                (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "AGG_DISTRICT")) {
+                otherConnection.push(res);
+              }
+          }  
+          this.cy.add([
+            {
+              group: 'nodes',
+              data: {
+                id: this.prtConnection[0].node_code,
+                type: this.prtConnection[0].node_type,
+                interface: this.prtConnection[0].interface_port
+              },
+            },
+            {
+              group: 'nodes',
+              data: {
+                id: this.prtConnection[0].node_code_relation,
+                type: this.prtConnection[0].node_type_relation,
+                interface: this.prtConnection[0].interface_port_relation,
+              }
+            },
+            {
+              group: 'edges',
+              data: {
+                source: this.prtConnection[0].node_code,
+                target: this.prtConnection[0].node_code_relation
+              }
             }
-            this.cy.layout({
-              name:'breadthfirst',
-              animate:false,
-            }).run();
+          ])
+
+          for (let res of otherConnection) {
+            this.cy.add([
+              {
+                group: 'nodes',
+                data: {
+                  id: res.node_code,
+                  type: res.node_type.trim(),
+                  interface: res.interface_port
+                },
+              },
+              {
+                group: 'nodes',
+                data: {
+                  id: res.node_code_relation,
+                  type: res.node_type_relation.trim(),
+                  interface: res.interface_port_relation
+                }
+              },
+              {
+                group: 'edges',
+                data: {
+                  source: res.node_code,
+                  target: res.node_code_relation
+                }
+              }
+            ])
           }
+          let root_node = this.cy.$id(this.prtConnection[0].node_code)
+          let target_node = this.cy.$id(this.prtConnection[0].node_code_relation)
+          var dijkstra = this.cy.elements().dijkstra({
+            root: '#' + root_node.data('id'),
+            weight: this.cy.data('weight'),
+            directed: false
+          });
+          var bfs = dijkstra.pathTo( this.cy.$(this.prtConnection[0].node_code_relation) );
+          var x=0;
+          var highlightNextEle = function(){
+           var el=bfs[x];
+            el.addClass('highlighted');
+            if(x<bfs.length){
+              x++;
+              setTimeout(highlightNextEle, 500);
+            }
+             };
+          highlightNextEle();
+
+          //console.log(findPaths(this.cy.$id(this.prtConnection[0].node_code), this.cy.$id(this.prtConnection[0].node_code_relation)));
+/*
+          var idList = [];
+          var end_prt = this.prtConnection[0].node_code_relation;
+          //console.log(this.prtConnection);
+          var bfs = this.cy.elements().bfs({
+            roots: '#' + this.prtConnection[0].node_code,
+            visit: function (v, e, u, i, depth) {
+              idList[i] = v.id();
+              if (v.data('id') == end_prt && depth > 1) {
+                return true;
+              } 
+              return;
+            },
+            directed: false
+          });
+          var path = bfs.path;
+          //console.log(path); */
         });
+        
       }
+
+
 
       this.cy.style([ 
         {
@@ -197,8 +270,37 @@ export class NodeDataComponent implements OnInit{
             'curve-style':'straight',
             'line-color':'#1384B9'
           }
+        },
+        {
+          selector: 'highlighted',
+          style: {
+            'line-color':'red',
+            'width':3
+          }
         }
       ]);
+/*
+      var idList = [];
+      var end_prt = this.prtConnection[0].node_code_relation;
+      console.log(this.prtConnection);
+      var bfs = this.cy.elements().bfs({
+        roots: '#' + this.prtConnection[0].node_code,
+        visit: function (v, e, u, i, depth) {
+          idList[i] = v.id();
+          if (v.data('id') == end_prt && depth > 1) {
+            return true;
+          } 
+          return;
+        },
+        directed: false
+      });
+      var path = bfs.path;
+      console.log(path);
+*/
+      //console.log(this.prtConnection);
+      //var prtConnect = this.prtConnection[0];
+      //console.log(this.prtConnection[0]);
+      //console.log(prtConnect)
 
       this.cy.on('tap', 'node', (evt) => {
         this.messageService.add({
@@ -262,6 +364,8 @@ export class NodeDataComponent implements OnInit{
           popperDiv.parentNode.removeChild(popperDiv);
         }
       });
+
+
     })
   }
 
@@ -283,6 +387,11 @@ export class NodeDataComponent implements OnInit{
       detail: event.node.label
     })
   }
+
+  
+  //getRing(start_prt: , end_prt: string): string[] {
+  //  let successors = start_prt.succ
+  //}
 }
 
 function getChildrenLocation(location_id: any, locations: any[]): TreeNode[] {
@@ -303,3 +412,38 @@ function getChildrenLocation(location_id: any, locations: any[]): TreeNode[] {
   })
   return childLocations
 }
+
+function findPaths(src: any, dest: any) {
+  let successors = src.successors();
+  let predecessors = dest.predecessors();
+  return successors.intersection(predecessors);
+}
+
+/*
+
+                this.cy.add([
+                  {
+                    group: 'nodes',
+                    data: {
+                      id: res.node_code,
+                      type: res.node_type.trim(),
+                      interface: res.interface_port
+                    },
+                  },
+                  {
+                    group: 'nodes',
+                    data: {
+                      id: res.node_code_relation,
+                      type: res.node_type_relation.trim(),
+                      interface: res.interface_port_relation
+                    }
+                  },
+                  {
+                    group: 'edges',
+                    data: {
+                      source: res.node_code,
+                      target: res.node_code_relation
+                    }
+                  }
+                ])
+*/
