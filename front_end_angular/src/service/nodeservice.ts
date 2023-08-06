@@ -3,10 +3,10 @@ import { DefaultIterableDiffer, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable,of} from 'rxjs';
 import { Location } from 'src/app/node-data/location';
-import { Device } from 'src/app/device/device';    
+import { Device } from 'src/app/node-data/device';    
 import { DeviceComponent } from 'src/app/device/device.component';
-import { Relation } from 'src/app/relation/relation';
-import { Connection } from 'src/app/relation/connection';
+import { Relation } from 'src/app/node-data/relation';
+import { Connection } from 'src/app/node-data/connection';
 
 const httpOptions ={
     headers:new HttpHeaders({'Content-Type':'Application/json'})

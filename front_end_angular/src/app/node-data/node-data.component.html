@@ -31,7 +31,7 @@
     &nbsp;
     <button pButton type="button" label="Collapse all" (click)="collapseAll()" pTooltip="Collapse all provinces"></button>
     <p-tree [value]="data" selectionMode="single" [filter]="true" filterMode="strict" filterPlaceholder="Search province" [(selection)]="selected_node"
-      (onNodeSelect)="printSelectedNode($event)" (onNodeUnselect)="closeSelectedNode($event)"
+      (onNodeSelect)="printSelectedNode($event)"
     ></p-tree>
     
 </div>

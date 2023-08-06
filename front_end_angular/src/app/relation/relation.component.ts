@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
-import { Device } from '../device/device';
+import { Device } from '../node-data/device';
 import { NodeService } from 'src/service/nodeservice';
-import { Relation } from './relation';
+import { Relation } from '../node-data/relation';
 
 @Component({
   selector: 'app-relation',

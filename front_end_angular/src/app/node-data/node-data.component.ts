@@ -1,15 +1,15 @@
-import { Component, DestroyRef, OnInit, Renderer2 } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NodeService } from 'src/service/nodeservice';
 import { Location } from './location';
 import { TreeNode } from 'primeng/api';
 import { MessageService } from 'primeng/api';
-import { Device } from '../device/device';
-import { Relation } from '../relation/relation';
-import { Connection } from '../relation/connection';
+import { Device } from './device';
+//import { Relation } from '../relation/relation';
+import { Connection } from './connection';
 import * as cytoscape from 'cytoscape';
 import * as popper from 'cytoscape-popper';
 import 'cytoscape-qtip';
-import { group } from '@angular/animations';
+//import { group } from '@angular/animations';
 
 @Component({
   selector: 'app-node-data',
@@ -20,24 +20,12 @@ import { group } from '@angular/animations';
 export class NodeDataComponent implements OnInit{
 
   public cy!: cytoscape.Core;
-
   locations: Location[] = [];
-
-  //customTreeNodes!: TreeNode[];
-
   data!: TreeNode[] ;
-  
-  //relations!: Relation[] ;
-
   connections!: Connection[];
-
   selected_node!: any;
-
   prtConnection!: Connection[];
-
   devices!: Device[];
-
-  render!: Renderer2;
   constructor(
     private nodeService: NodeService, private messageService: MessageService
   ) {}
@@ -133,11 +121,12 @@ export class NodeDataComponent implements OnInit{
       })
       var addedElementIds = new Set();
       var addedEdges = new Set();
-      let subscribleFlag = false;
       for (let device of coreDevices) {
         this.nodeService.getRelation(device.device_code).subscribe((responses) => {
+          
           for (let res of responses) {
-              if (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "CORE_PROVINCE" && !addedElementIds.has(res.node_code) && !addedElementIds.has(res.node_code_relation)) {
+              if (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "CORE_PROVINCE" 
+                && !addedElementIds.has(res.node_code) && !addedElementIds.has(res.node_code_relation)) {
                 this.prtConnection.push(res);
               } else if( (res.node_type == "AGG_DISTRICT" && res.node_type_relation == "CORE_PROVINCE") ||
                 (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "AGG_DISTRICT")) {
@@ -164,8 +153,8 @@ export class NodeDataComponent implements OnInit{
                   }
                 },
               ])
-              addedElementIds.add(this.prtConnection[0].node_code);
-              addedElementIds.add(this.prtConnection[0].node_code_relation);
+              addedElementIds.add(prt.node_code);
+              addedElementIds.add(prt.node_code_relation);
             }
           }
 
@@ -212,35 +201,7 @@ export class NodeDataComponent implements OnInit{
               addedEdges.add(edgeId);
             }
           }
-
-          var highlightedEdgeStyle = {
-            'line-color': 'red',
-          };
-
-          var cytoPrtConnection = this.cy.edges('[type="PRT_PRT"]');
-          for (let prt of cytoPrtConnection) {
-            var source_node = prt.source();
-            var target_node = prt.target();
-            var dijkstra = this.cy.elements().dijkstra({
-              root: '#' + source_node.data('id'),
-              weight: this.cy.data('weight'),
-              directed: false
-            }).pathTo(target_node);
-    
-            var bfs = dijkstra;
-            var x=0;
-            var highlightNextEle = function(){
-              var el=bfs[x];
-              el.addClass('highlighted');
-              if(x<bfs.length){
-                x++;
-                setTimeout(highlightNextEle, 500);
-              }
-              };
-            highlightNextEle();
-            this.cy.style().selector('.highlighted').style(highlightedEdgeStyle).update();
-          }
-
+          
           for (let res of this.prtConnection) {
             var edgeId = `${res.node_code}-${res.node_code_relation}`;
             var revertedEdgeId = `${res.node_code_relation}-${res.node_code}`;
@@ -259,35 +220,17 @@ export class NodeDataComponent implements OnInit{
               addedEdges.add(edgeId);
             }
           }
-
+          findAllAvailablePath(this.cy);
+          var highlightedEdgeStyle = {
+            'line-color': 'red',
+          };
+          this.cy.style().selector('.highlighted').style(highlightedEdgeStyle).update();
           this.cy.layout({
             name: 'breadthfirst',
             directed: false,
           }).run();
-
-
-
-
-          
         });
       }
-
-      
-
-      function findPaths(src: cytoscape.NodeCollection,dest: cytoscape.NodeCollection) {
-        let successors = src.successors();
-        let predecessors = dest.predecessors();
-        return successors.intersection(predecessors);
-      }
-
-
-      //console.log(this.prtConnection);
-     // var cyPrtConnection = this.cy.nodes().data({
-      //  type: "CORE_PROVINCE"
-     // })
-
-
-      
 
       this.cy.style([ 
         {
@@ -316,8 +259,6 @@ export class NodeDataComponent implements OnInit{
         },
       ]);
       
-
-
       this.cy.on('tap', 'node', (evt) => {
         this.messageService.add({
           severity: "info",
@@ -333,96 +274,100 @@ export class NodeDataComponent implements OnInit{
           detail: "Between: " + evt.target.data('source') + " and: " + evt.target.data('target'),
         })
       });
-/*
-      this.cy.on('tap', 'node', function (event) {
-        var connectedEdges = event.target.successors()
-        var i = 0;
+      popperDefine(this.cy, this.devices);
+    })
+  }
+}
 
-        var highlightNextEle = function(){
-            if( i < connectedEdges.length ){
-                connectedEdges[i].addClass('highlighted');
-                i++;
-                highlightNextEle();
-            }
-        };
-        highlightNextEle();
-      });
-*/
+function findAllAvailablePath(cy: cytoscape.Core): void {
+  var cytoPrtConnection = cy.edges('[type="PRT_PRT"]');
+  for (let prt of cytoPrtConnection) {
+    var source_node = prt.source();
+    var target_node = prt.target();
 
-      var popper: any = null;
-      var popperDiv = document.createElement('div');
-      popperDiv.style.backgroundColor = '#fff'; 
-      popperDiv.style.color = '#000'; 
-      popperDiv.style.padding = '8px'; 
-      popperDiv.style.border = '2px solid cyan';
-      popperDiv.style.borderRadius = '4px';
-      popperDiv.style.fontFamily = 'Montserrat, Arial, sans-serif'; 
-      popperDiv.style.fontSize = '12px';
-      
-      this.cy.on('mouseover', 'node', (evt) => {
-        const node = evt.target;
-        if (popper) {
-          popper.destroy();
-          popper = null;
+    const allpaths = findAllWays(source_node, target_node);
+    markAllPaths(cy, allpaths)
+  }
+}
+
+function findAllWays(source_node: cytoscape.NodeCollection, target_node: cytoscape.NodeCollection): cytoscape.NodeCollection[][] {
+  var paths: cytoscape.NodeCollection[][] = [];
+  var visitedNode: Record<string, boolean> = {};
+  function dfs(currentNode: cytoscape.NodeCollection, currentPath: cytoscape.NodeCollection[]) {
+    visitedNode[currentNode.data('id')] = true;
+    currentPath.push(currentNode);
+
+    if (currentNode.data('id') === target_node.data('id')) {
+      paths.push([...currentPath]);
+    } else {
+      currentNode.neighborhood().each(neighbor => {
+        if (!visitedNode[neighbor.data('id')]) {
+          dfs(neighbor, [...currentPath]);
         }
-      
-        popperDiv.innerHTML = `Type: ${node.data('type')}<br>Location: ${this.devices.find(({device_code}) => device_code === node.data('id'))?.location_name}
-          <br>Dept Code: ${this.devices.find(({device_code}) => device_code === node.data('id'))?.dept_code}`;
-        document.body.appendChild(popperDiv);
-      
-        popper = this.cy.popper({
-          content: () => popperDiv,
-          renderedPosition: () => ({ x: node.renderedPosition().x, y: node.renderedPosition().y - 12}),
-          popper: {
-            placement: 'top',  
-            modifiers: [
-              {
-                name: 'flip',
-                enabled: false,
-              },
-          ],
-            strategy: 'absolute',
+      })
+    }
+
+    visitedNode[currentNode.data('id')] = false;
+  }
+  dfs(source_node, []);
+  return paths;
+}
+
+function markAllPaths(cy: any, paths: cytoscape.NodeCollection[][]) {
+  paths.forEach(path => {
+    for (let i = 0; i < path.length - 1; i++) {
+      path[i].edgesWith(path[i + 1]).addClass('highlighted');
+    }
+  });
+}
+
+function popperDefine(cy: cytoscape.Core, devices: Device[]): void {
+  var popper: any = null;
+  var popperDiv = document.createElement('div');
+  popperDiv.style.backgroundColor = '#fff'; 
+  popperDiv.style.color = '#000'; 
+  popperDiv.style.padding = '8px'; 
+  popperDiv.style.border = '2px solid cyan';
+  popperDiv.style.borderRadius = '4px';
+  popperDiv.style.fontFamily = 'Montserrat, Arial, sans-serif'; 
+  popperDiv.style.fontSize = '12px';
+  
+  cy.on('mouseover', 'node', (evt) => {
+    const node = evt.target;
+    if (popper) {
+      popper.destroy();
+      popper = null;
+    }
+  
+    popperDiv.innerHTML = `Type: ${node.data('type')}<br>Location: ${devices.find(({device_code}) => device_code === node.data('id'))?.location_name}
+      <br>Dept Code: ${devices.find(({device_code}) => device_code === node.data('id'))?.dept_code}`;
+    document.body.appendChild(popperDiv);
+  
+    popper = cy.popper({
+      content: () => popperDiv,
+      renderedPosition: () => ({ x: node.renderedPosition().x, y: node.renderedPosition().y - 12}),
+      popper: {
+        placement: 'top',  
+        modifiers: [
+          {
+            name: 'flip',
+            enabled: false,
           },
-        });
-      });
-      
-      this.cy.on('mouseout', 'node', () => {
-        if (popper) {
-          popper.destroy();
-          popper = null;
-        }
-        if (popperDiv.parentNode) {
-          popperDiv.parentNode.removeChild(popperDiv);
-        }
-      });
-
-
-    })
-  }
-
+      ],
+        strategy: 'absolute',
+      },
+    });
+  });
   
-  getNodeDevices(location_id: any): Device[] {
-    let subdev: Device[] = [];
-    this.nodeService.getAllDevice(location_id).subscribe((res: any) => {
-      subdev = res;
-      console.log(subdev);
-      return subdev;
-    })
-    return subdev;
-  }
-
-  closeSelectedNode(event: any) {
-    this.messageService.add({
-      severity: "info",
-      summary: "A node unselected",
-      detail: event.node.label
-    })
-  }
-
-  
-  //getRing(start_prt: , end_prt: string): string[] {
-  //  let successors = start_prt.succ
-  //}
+  cy.on('mouseout', 'node', () => {
+    if (popper) {
+      popper.destroy();
+      popper = null;
+    }
+    if (popperDiv.parentNode) {
+      popperDiv.parentNode.removeChild(popperDiv);
+    }
+  });
 }
 
 function getChildrenLocation(location_id: any, locations: any[]): TreeNode[] {
@@ -443,101 +388,3 @@ function getChildrenLocation(location_id: any, locations: any[]): TreeNode[] {
   })
   return childLocations
 }
-
-function findPaths(src: any, dest: any) {
-  let successors = src.successors();
-  let predecessors = dest.predecessors();
-  return successors.intersection(predecessors);
-}
-
-/*
-      var idList = [];
-      var end_prt = this.prtConnection[0].node_code_relation;
-      console.log(this.prtConnection);
-      var bfs = this.cy.elements().bfs({
-        roots: '#' + this.prtConnection[0].node_code,
-        visit: function (v, e, u, i, depth) {
-          idList[i] = v.id();
-          if (v.data('id') == end_prt && depth > 1) {
-            return true;
-          } 
-          return;
-        },
-        directed: false
-      });
-      var path = bfs.path;
-      console.log(path);
-*/
-      //console.log(this.prtConnection);
-      //var prtConnect = this.prtConnection[0];
-      //console.log(this.prtConnection[0]);
-      //console.log(prtConnect)
-
-          /* 
-          let root_node = this.cy.$id(this.prtConnection[0].node_code)
-          console.log(root_node.data('id'));
-          let target_node = this.cy.$id(this.prtConnection[0].node_code_relation)
-          var dijkstra = this.cy.elements().dijkstra({
-            root: '#' + root_node.data('id'),
-            weight: this.cy.data('weight'),
-            directed: false
-          });
-          var bfs = dijkstra.pathTo( this.cy.$(this.prtConnection[0].node_code_relation) );
-          var x=0;
-          var highlightNextEle = function(){
-           var el=bfs[x];
-            el.addClass('highlighted');
-            if(x<bfs.length){
-              x++;
-              setTimeout(highlightNextEle, 500);
-            }
-             };
-          highlightNextEle();
-*/
-          //console.log(findPaths(this.cy.$id(this.prtConnection[0].node_code), this.cy.$id(this.prtConnection[0].node_code_relation)));
-/*
-          var idList = [];
-          var end_prt = this.prtConnection[0].node_code_relation;
-          //console.log(this.prtConnection);
-          var bfs = this.cy.elements().bfs({
-            roots: '#' + this.prtConnection[0].node_code,
-            visit: function (v, e, u, i, depth) {
-              idList[i] = v.id();
-              if (v.data('id') == end_prt && depth > 1) {
-                return true;
-              } 
-              return;
-            },
-            directed: false
-          });
-          var path = bfs.path;
-          //console.log(path); */
-
-/*
-
-                this.cy.add([
-                  {
-                    group: 'nodes',
-                    data: {
-                      id: res.node_code,
-                      type: res.node_type.trim(),
-                      interface: res.interface_port
-                    },
-                  },
-                  {
-                    group: 'nodes',
-                    data: {
-                      id: res.node_code_relation,
-                      type: res.node_type_relation.trim(),
-                      interface: res.interface_port_relation
-                    }
-                  },
-                  {
-                    group: 'edges',
-                    data: {
-                      source: res.node_code,
-                      target: res.node_code_relation
-                    }
-                  }
-                ])
-*/
