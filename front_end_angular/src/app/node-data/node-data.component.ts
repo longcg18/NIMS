@@ -4,12 +4,10 @@ import { Location } from './location';
 import { TreeNode } from 'primeng/api';
 import { MessageService } from 'primeng/api';
 import { Device } from './device';
-//import { Relation } from '../relation/relation';
 import { Connection } from './connection';
 import * as cytoscape from 'cytoscape';
 import * as popper from 'cytoscape-popper';
 import 'cytoscape-qtip';
-//import { group } from '@angular/animations';
 
 @Component({
   selector: 'app-node-data',

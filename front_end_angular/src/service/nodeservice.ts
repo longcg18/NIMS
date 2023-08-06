@@ -4,8 +4,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable,of} from 'rxjs';
 import { Location } from 'src/app/node-data/location';
 import { Device } from 'src/app/node-data/device';    
-import { DeviceComponent } from 'src/app/device/device.component';
-import { Relation } from 'src/app/node-data/relation';
 import { Connection } from 'src/app/node-data/connection';
 
 const httpOptions ={
