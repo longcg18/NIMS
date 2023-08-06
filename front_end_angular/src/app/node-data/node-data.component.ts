@@ -123,7 +123,6 @@ export class NodeDataComponent implements OnInit{
       summary: "Province selected:",
       detail: event.node.label
     });
-
     this.prtConnection = [];
     let otherConnection: Connection[] = [];
     this.nodeService.getAllDevice(event.node.key).subscribe((res: any) => {
@@ -132,111 +131,163 @@ export class NodeDataComponent implements OnInit{
       this.cy = cytoscape({
         container: document.getElementById('cy'),
       })
+      var addedElementIds = new Set();
+      var addedEdges = new Set();
+      let subscribleFlag = false;
       for (let device of coreDevices) {
         this.nodeService.getRelation(device.device_code).subscribe((responses) => {
           for (let res of responses) {
-              if (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "CORE_PROVINCE") {         
+              if (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "CORE_PROVINCE" && !addedElementIds.has(res.node_code) && !addedElementIds.has(res.node_code_relation)) {
                 this.prtConnection.push(res);
               } else if( (res.node_type == "AGG_DISTRICT" && res.node_type_relation == "CORE_PROVINCE") ||
                 (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "AGG_DISTRICT")) {
                 otherConnection.push(res);
               }
           }  
-          this.cy.add([
-            {
-              group: 'nodes',
-              data: {
-                id: this.prtConnection[0].node_code,
-                type: this.prtConnection[0].node_type,
-                interface: this.prtConnection[0].interface_port
-              },
-            },
-            {
-              group: 'nodes',
-              data: {
-                id: this.prtConnection[0].node_code_relation,
-                type: this.prtConnection[0].node_type_relation,
-                interface: this.prtConnection[0].interface_port_relation,
-              }
-            },
-            {
-              group: 'edges',
-              data: {
-                source: this.prtConnection[0].node_code,
-                target: this.prtConnection[0].node_code_relation
-              }
+          for (let prt of this.prtConnection) {
+            if (!addedElementIds.has(prt.node_code)) {
+              this.cy.add([
+                {
+                  group: 'nodes',
+                  data: {
+                    id: prt.node_code,
+                    type: prt.node_type,
+                    interface: prt.interface_port
+                  }
+                },
+                {
+                  group: 'nodes',
+                  data: {
+                    id: prt.node_code_relation,
+                    type: prt.node_type_relation,
+                    interface: prt.interface_port_relation
+                  }
+                },
+              ])
+              addedElementIds.add(this.prtConnection[0].node_code);
+              addedElementIds.add(this.prtConnection[0].node_code_relation);
             }
-          ])
+          }
 
           for (let res of otherConnection) {
-            this.cy.add([
-              {
-                group: 'nodes',
-                data: {
-                  id: res.node_code,
-                  type: res.node_type.trim(),
-                  interface: res.interface_port
+            var edgeId = `${res.node_code}-${res.node_code_relation}`;
+            var revertedEdgeId = `${res.node_code_relation}-${res.node_code}`;
+            if (!addedElementIds.has(res.node_code)) {
+              this.cy.add([
+                {
+                  group: 'nodes',
+                  data: {
+                    id: res.node_code,
+                    type: res.node_type.trim(),
+                    interface: res.interface_port
+                  },
                 },
-              },
-              {
-                group: 'nodes',
-                data: {
-                  id: res.node_code_relation,
-                  type: res.node_type_relation.trim(),
-                  interface: res.interface_port_relation
-                }
-              },
-              {
-                group: 'edges',
-                data: {
-                  source: res.node_code,
-                  target: res.node_code_relation
-                }
-              }
-            ])
-          }
-          let root_node = this.cy.$id(this.prtConnection[0].node_code)
-          let target_node = this.cy.$id(this.prtConnection[0].node_code_relation)
-          var dijkstra = this.cy.elements().dijkstra({
-            root: '#' + root_node.data('id'),
-            weight: this.cy.data('weight'),
-            directed: false
-          });
-          var bfs = dijkstra.pathTo( this.cy.$(this.prtConnection[0].node_code_relation) );
-          var x=0;
-          var highlightNextEle = function(){
-           var el=bfs[x];
-            el.addClass('highlighted');
-            if(x<bfs.length){
-              x++;
-              setTimeout(highlightNextEle, 500);
+              ])
+              addedElementIds.add(this.prtConnection[0].node_code);
             }
-             };
-          highlightNextEle();
+            if (!addedElementIds.has(res.node_code_relation)) {
+              this.cy.add([
+                {
+                  group: 'nodes',
+                  data: {
+                    id: res.node_code_relation,
+                    type: res.node_type_relation.trim(),
+                    interface: res.interface_port_relation
+                  }
+                }
+              ])
+              addedElementIds.add(this.prtConnection[0].node_code_relation);
+            }
+            if (!addedEdges.has(edgeId) && !addedEdges.has(revertedEdgeId)) {
+              this.cy.add([
+                {
+                  group: 'edges',
+                  data: {
+                    id: edgeId,
+                    source: res.node_code,
+                    target: res.node_code_relation
+                  }
+                }
+              ])
+              addedEdges.add(edgeId);
+            }
+          }
 
-          //console.log(findPaths(this.cy.$id(this.prtConnection[0].node_code), this.cy.$id(this.prtConnection[0].node_code_relation)));
-/*
-          var idList = [];
-          var end_prt = this.prtConnection[0].node_code_relation;
-          //console.log(this.prtConnection);
-          var bfs = this.cy.elements().bfs({
-            roots: '#' + this.prtConnection[0].node_code,
-            visit: function (v, e, u, i, depth) {
-              idList[i] = v.id();
-              if (v.data('id') == end_prt && depth > 1) {
-                return true;
-              } 
-              return;
-            },
-            directed: false
-          });
-          var path = bfs.path;
-          //console.log(path); */
+          var highlightedEdgeStyle = {
+            'line-color': 'red',
+          };
+
+          var cytoPrtConnection = this.cy.edges('[type="PRT_PRT"]');
+          for (let prt of cytoPrtConnection) {
+            var source_node = prt.source();
+            var target_node = prt.target();
+            var dijkstra = this.cy.elements().dijkstra({
+              root: '#' + source_node.data('id'),
+              weight: this.cy.data('weight'),
+              directed: false
+            }).pathTo(target_node);
+    
+            var bfs = dijkstra;
+            var x=0;
+            var highlightNextEle = function(){
+              var el=bfs[x];
+              el.addClass('highlighted');
+              if(x<bfs.length){
+                x++;
+                setTimeout(highlightNextEle, 500);
+              }
+              };
+            highlightNextEle();
+            this.cy.style().selector('.highlighted').style(highlightedEdgeStyle).update();
+          }
+
+          for (let res of this.prtConnection) {
+            var edgeId = `${res.node_code}-${res.node_code_relation}`;
+            var revertedEdgeId = `${res.node_code_relation}-${res.node_code}`;
+            if (!addedEdges.has(edgeId) && !addedEdges.has(revertedEdgeId)) {
+              this.cy.add([
+                {
+                  group: 'edges',
+                  data: {
+                    id: edgeId,
+                    source: res.node_code,
+                    target: res.node_code_relation,
+                    type: "PRT_PRT"
+                  }
+                }
+              ])
+              addedEdges.add(edgeId);
+            }
+          }
+
+          this.cy.layout({
+            name: 'breadthfirst',
+            directed: false,
+          }).run();
+
+
+
+
+          
         });
-        
+      }
+
+      
+
+      function findPaths(src: cytoscape.NodeCollection,dest: cytoscape.NodeCollection) {
+        let successors = src.successors();
+        let predecessors = dest.predecessors();
+        return successors.intersection(predecessors);
       }
 
 
+      //console.log(this.prtConnection);
+     // var cyPrtConnection = this.cy.nodes().data({
+      //  type: "CORE_PROVINCE"
+     // })
+
+
+      
 
       this.cy.style([ 
         {
@@ -263,44 +314,9 @@ export class NodeDataComponent implements OnInit{
             'background-image':'../assets/switch.png',
           },
         },
-        {
-          selector: 'edge',
-          style: {
-            'width':1,
-            'curve-style':'straight',
-            'line-color':'#1384B9'
-          }
-        },
-        {
-          selector: 'highlighted',
-          style: {
-            'line-color':'red',
-            'width':3
-          }
-        }
       ]);
-/*
-      var idList = [];
-      var end_prt = this.prtConnection[0].node_code_relation;
-      console.log(this.prtConnection);
-      var bfs = this.cy.elements().bfs({
-        roots: '#' + this.prtConnection[0].node_code,
-        visit: function (v, e, u, i, depth) {
-          idList[i] = v.id();
-          if (v.data('id') == end_prt && depth > 1) {
-            return true;
-          } 
-          return;
-        },
-        directed: false
-      });
-      var path = bfs.path;
-      console.log(path);
-*/
-      //console.log(this.prtConnection);
-      //var prtConnect = this.prtConnection[0];
-      //console.log(this.prtConnection[0]);
-      //console.log(prtConnect)
+      
+
 
       this.cy.on('tap', 'node', (evt) => {
         this.messageService.add({
@@ -317,6 +333,21 @@ export class NodeDataComponent implements OnInit{
           detail: "Between: " + evt.target.data('source') + " and: " + evt.target.data('target'),
         })
       });
+/*
+      this.cy.on('tap', 'node', function (event) {
+        var connectedEdges = event.target.successors()
+        var i = 0;
+
+        var highlightNextEle = function(){
+            if( i < connectedEdges.length ){
+                connectedEdges[i].addClass('highlighted');
+                i++;
+                highlightNextEle();
+            }
+        };
+        highlightNextEle();
+      });
+*/
 
       var popper: any = null;
       var popperDiv = document.createElement('div');
@@ -418,6 +449,69 @@ function findPaths(src: any, dest: any) {
   let predecessors = dest.predecessors();
   return successors.intersection(predecessors);
 }
+
+/*
+      var idList = [];
+      var end_prt = this.prtConnection[0].node_code_relation;
+      console.log(this.prtConnection);
+      var bfs = this.cy.elements().bfs({
+        roots: '#' + this.prtConnection[0].node_code,
+        visit: function (v, e, u, i, depth) {
+          idList[i] = v.id();
+          if (v.data('id') == end_prt && depth > 1) {
+            return true;
+          } 
+          return;
+        },
+        directed: false
+      });
+      var path = bfs.path;
+      console.log(path);
+*/
+      //console.log(this.prtConnection);
+      //var prtConnect = this.prtConnection[0];
+      //console.log(this.prtConnection[0]);
+      //console.log(prtConnect)
+
+          /* 
+          let root_node = this.cy.$id(this.prtConnection[0].node_code)
+          console.log(root_node.data('id'));
+          let target_node = this.cy.$id(this.prtConnection[0].node_code_relation)
+          var dijkstra = this.cy.elements().dijkstra({
+            root: '#' + root_node.data('id'),
+            weight: this.cy.data('weight'),
+            directed: false
+          });
+          var bfs = dijkstra.pathTo( this.cy.$(this.prtConnection[0].node_code_relation) );
+          var x=0;
+          var highlightNextEle = function(){
+           var el=bfs[x];
+            el.addClass('highlighted');
+            if(x<bfs.length){
+              x++;
+              setTimeout(highlightNextEle, 500);
+            }
+             };
+          highlightNextEle();
+*/
+          //console.log(findPaths(this.cy.$id(this.prtConnection[0].node_code), this.cy.$id(this.prtConnection[0].node_code_relation)));
+/*
+          var idList = [];
+          var end_prt = this.prtConnection[0].node_code_relation;
+          //console.log(this.prtConnection);
+          var bfs = this.cy.elements().bfs({
+            roots: '#' + this.prtConnection[0].node_code,
+            visit: function (v, e, u, i, depth) {
+              idList[i] = v.id();
+              if (v.data('id') == end_prt && depth > 1) {
+                return true;
+              } 
+              return;
+            },
+            directed: false
+          });
+          var path = bfs.path;
+          //console.log(path); */
 
 /*
 
