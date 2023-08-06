@@ -3,7 +3,7 @@
 <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-dagre/1.5.0/cytoscape-dagre.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.5/dist/umd/popper.min.js"></script>
 <script src="https://unpkg.com/tippy.js@6"></script>
-<link rel="stylesheet" href="/node_modules/tippy.js/dist/tippy.css">
+<!--link rel="stylesheet" href="/node_modules/tippy.js/dist/tippy.css"-->
 
 
 <style>
@@ -31,7 +31,7 @@
     &nbsp;
     <button pButton type="button" label="Collapse all" (click)="collapseAll()" pTooltip="Collapse all provinces"></button>
     <p-tree [value]="data" selectionMode="single" [filter]="true" filterMode="strict" filterPlaceholder="Search province" [(selection)]="selected_node"
-      (onNodeSelect)="printSelectedNode($event)" (onNodeUnselect)="closeSelectedNode($event)"
+      (onNodeSelect)="printSelectedNode($event)"
     ></p-tree>
     
 </div>
