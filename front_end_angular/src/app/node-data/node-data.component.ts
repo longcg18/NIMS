@@ -8,6 +8,9 @@ import { Connection } from './connection';
 import * as cytoscape from 'cytoscape';
 import * as popper from 'cytoscape-popper';
 import 'cytoscape-qtip';
+import * as dagre from 'cytoscape-dagre';
+
+//import coseBilkent from 'cytoscape-cose-bilkent';
 
 @Component({
   selector: 'app-node-data',
@@ -24,12 +27,16 @@ export class NodeDataComponent implements OnInit{
   selected_node!: any;
   prtConnection!: Connection[];
   devices!: Device[];
+  visible: boolean = false;
+  ringData!: string[];
+  provinceName!: string;
   constructor(
     private nodeService: NodeService, private messageService: MessageService
   ) {}
 
   ngOnInit(): void {
     cytoscape.use(popper)
+    cytoscape.use(dagre)
     this.nodeService.getAll().subscribe((res: any) => {
       this.locations = res;
       let tempLocations: Location[] = res;
@@ -78,6 +85,9 @@ export class NodeDataComponent implements OnInit{
     this.cy.layout({
       name: 'cose',
       animate: true,
+      //gravity: -500,
+      spacingFactor: 0.1,
+      avoidOverlap: true,
     }).run();
   }
 
@@ -102,6 +112,18 @@ export class NodeDataComponent implements OnInit{
     }).run()
   }
 
+  changeLayoutToBreathFirst() {
+    this.cy.layout({
+      name: 'breadthfirst',
+      animate: true,
+    }).run();
+  }
+
+  showDialog() {
+    this.visible = true;
+    
+  }
+
   printSelectedNode(event: any) {
     let coreDevices: Device[] = [];
     this.messageService.add({
@@ -109,6 +131,7 @@ export class NodeDataComponent implements OnInit{
       summary: "Province selected:",
       detail: event.node.label
     });
+    this.provinceName = event.node.label;
     this.prtConnection = [];
     let otherConnection: Connection[] = [];
     this.nodeService.getAllDevice(event.node.key).subscribe((res: any) => {
@@ -170,6 +193,7 @@ export class NodeDataComponent implements OnInit{
                   },
                 },
               ])
+              //addedElementIds.add(res.node_code);
               addedElementIds.add(this.prtConnection[0].node_code);
             }
             if (!addedElementIds.has(res.node_code_relation)) {
@@ -183,6 +207,7 @@ export class NodeDataComponent implements OnInit{
                   }
                 }
               ])
+              //addedElementIds.add(res.node_code_relation);
               addedElementIds.add(this.prtConnection[0].node_code_relation);
             }
             if (!addedEdges.has(edgeId) && !addedEdges.has(revertedEdgeId)) {
@@ -218,14 +243,16 @@ export class NodeDataComponent implements OnInit{
               addedEdges.add(edgeId);
             }
           }
+          this.ringData = findAllPaths(this.cy);
           findAllAvailablePath(this.cy);
           var highlightedEdgeStyle = {
             'line-color': 'red',
+            'width':2
           };
           this.cy.style().selector('.highlighted').style(highlightedEdgeStyle).update();
           this.cy.layout({
-            name: 'breadthfirst',
-            directed: false,
+            name: 'dagre',
+            //directed: false,
           }).run();
         });
       }
@@ -234,7 +261,6 @@ export class NodeDataComponent implements OnInit{
         {
           selector: 'node',
           style: {
-            'label': 'data(id)',
             'background-clip':'none',
             'background-fit':'cover',
             'background-opacity': 0, 
@@ -252,9 +278,18 @@ export class NodeDataComponent implements OnInit{
         {
           selector: 'node[type="CORE_PROVINCE"]',
           style: {
-            'background-image':'../assets/switch.png',
+            'label': 'data(id)',
+            'background-image':'../assets/images.png',
+            'background-image-smoothing':'yes'
           },
         },
+        {
+          selector: 'edge',
+          style: {
+            'width':1,
+            'line-color':'#1384B9',
+          }
+        }
       ]);
       
       this.cy.on('tap', 'node', (evt) => {
@@ -288,6 +323,33 @@ function findAllAvailablePath(cy: cytoscape.Core): void {
   }
 }
 
+function findAllPaths(cy: cytoscape.Core): string[] {
+  var res: string[] = [];
+  var cytoPrtConnection = cy.edges('[type="PRT_PRT"]');
+
+  for (let prt of cytoPrtConnection) {
+    var source_node = prt.source();
+    var target_node = prt.target();
+
+    const allpaths = findAllWays(source_node, target_node);
+    allpaths.forEach((e) => {
+      var addedRing = new Set();
+      var str: string = ""; 
+      for (let i of e) {
+        if (!addedRing.has(i)) {
+          str += i.data('id');
+          str += " "
+          addedRing.add(i);
+        }
+      }
+      if (str.length > 30) {
+        res.push(str);
+      }
+    })
+  }
+  return res;
+
+}
 function findAllWays(source_node: cytoscape.NodeCollection, target_node: cytoscape.NodeCollection): cytoscape.NodeCollection[][] {
   var paths: cytoscape.NodeCollection[][] = [];
   var visitedNode: Record<string, boolean> = {};

@@ -21,6 +21,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { PanelModule } from 'primeng/panel';
 import { TooltipModule } from 'primeng/tooltip';
 import { Tree } from 'primeng/tree';
+import { DialogModule } from 'primeng/dialog';
+
 
 @NgModule({
   declarations: [
@@ -39,6 +41,7 @@ import { Tree } from 'primeng/tree';
     HttpClientModule,
     ToastModule,
     BrowserAnimationsModule,
+    DialogModule
     
   ],
   providers: [NodeService, HttpClient, MessageService],
