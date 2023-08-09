@@ -43,8 +43,9 @@
     <button pButton icon="pi pi-instagram" class="p-button-danger" label="Grid" pTooltip="Change graph layout to Grid" (click)="changeLayoutToGrid()"></button>
     <button pButton icon="pi pi-linkedin" class="p-button-icon mr-2" label="Concentric" pTooltip="Change graph layout to Concentric" (click)="changeLayoutToConcentric()"></button>
     <button pButton icon="pi pi-reddit" class="p-button-danger" label="Circle" pTooltip="Change graph layout to Circle" (click)="changeLayoutToCircle()"></button>
-    <button pButton icon="pi pi-discord" class="p-button-icon mr-2" label="BreathFirst" pTooltip="Change graph layout to BreathFirst" (click)="changeLayoutToBreathFirst()"></button>
+    <button pButton icon="pi pi-discord" class="p-button-icon mr-2" label="BreathFirst" pTooltip="Change graph layout to BreadthFirst" (click)="changeLayoutToBreadthFirst()"></button>
     <p-button class="p-button-danger" (click)="showDialog()" icon="pi pi-external-link" label="Show Ring"></p-button>
+    <button pButton icon="pi pi-download" class="p-button-danger" label="Download" pTooltip="Download current graph" (click)="downloadCurrentCy()"></button>
     <p-dialog header="Rings in {{provinceName}}" [(visible)]="visible" [style]="{width: '500px', position: 'flex'}" style="border-color: aquamarine;">
       <ul>
         <li *ngFor="let ring of ringData" style="border: 0cap; border-color: chocolate;">

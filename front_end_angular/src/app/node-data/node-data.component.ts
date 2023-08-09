@@ -88,6 +88,7 @@ export class NodeDataComponent implements OnInit{
       //gravity: -500,
       spacingFactor: 0.1,
       avoidOverlap: true,
+      
     }).run();
   }
 
@@ -112,7 +113,7 @@ export class NodeDataComponent implements OnInit{
     }).run()
   }
 
-  changeLayoutToBreathFirst() {
+  changeLayoutToBreadthFirst() {
     this.cy.layout({
       name: 'breadthfirst',
       animate: true,
@@ -122,6 +123,17 @@ export class NodeDataComponent implements OnInit{
   showDialog() {
     this.visible = true;
     
+  }
+
+  downloadCurrentCy() {
+    const pngDataUri = this.cy.png({
+      scale:2
+    });
+
+    const link = document.createElement('a');
+    link.href = pngDataUri;
+    link.download = 'graph.png'
+    link.click();
   }
 
   printSelectedNode(event: any) {
@@ -399,7 +411,7 @@ function popperDefine(cy: cytoscape.Core, devices: Device[]): void {
       popper = null;
     }
   
-    popperDiv.innerHTML = `Type: ${node.data('type')}<br>Location: ${devices.find(({device_code}) => device_code === node.data('id'))?.location_name}
+    popperDiv.innerHTML = `ID: ${node.data('id')}<br>Type: ${node.data('type')}<br>Location: ${devices.find(({device_code}) => device_code === node.data('id'))?.location_name}
       <br>Dept Code: ${devices.find(({device_code}) => device_code === node.data('id'))?.dept_code}`;
     document.body.appendChild(popperDiv);
   
