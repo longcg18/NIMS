@@ -158,13 +158,13 @@ export class NodeDataComponent implements OnInit{
         this.nodeService.getRelation(device.device_code).subscribe((responses) => {
           
           for (let res of responses) {
-              if (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "CORE_PROVINCE" 
-                && !addedElementIds.has(res.node_code) && !addedElementIds.has(res.node_code_relation)) {
-                this.prtConnection.push(res);
-              } else if( (res.node_type == "AGG_DISTRICT" && res.node_type_relation == "CORE_PROVINCE") ||
-                (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "AGG_DISTRICT")) {
-                otherConnection.push(res);
-              }
+            if (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "CORE_PROVINCE" 
+              && !addedElementIds.has(res.node_code) && !addedElementIds.has(res.node_code_relation)) {
+              this.prtConnection.push(res);
+            } else if( (res.node_type == "AGG_DISTRICT" && res.node_type_relation == "CORE_PROVINCE") ||
+              (res.node_type == "CORE_PROVINCE" && res.node_type_relation == "AGG_DISTRICT")) {
+              otherConnection.push(res);
+            }
           }  
           for (let prt of this.prtConnection) {
             if (!addedElementIds.has(prt.node_code)) {
@@ -205,7 +205,6 @@ export class NodeDataComponent implements OnInit{
                   },
                 },
               ])
-              //addedElementIds.add(res.node_code);
               addedElementIds.add(this.prtConnection[0].node_code);
             }
             if (!addedElementIds.has(res.node_code_relation)) {
@@ -219,7 +218,6 @@ export class NodeDataComponent implements OnInit{
                   }
                 }
               ])
-              //addedElementIds.add(res.node_code_relation);
               addedElementIds.add(this.prtConnection[0].node_code_relation);
             }
             if (!addedEdges.has(edgeId) && !addedEdges.has(revertedEdgeId)) {
@@ -264,7 +262,6 @@ export class NodeDataComponent implements OnInit{
           this.cy.style().selector('.highlighted').style(highlightedEdgeStyle).update();
           this.cy.layout({
             name: 'dagre',
-            //directed: false,
           }).run();
         });
       }
